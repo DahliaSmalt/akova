@@ -9,6 +9,8 @@ var path = require('path');
 var async = require('async');
 var socketio = require('socket.io');
 var express = require('express');
+var db = require('mongoose');
+db.connect(process.env.MONGOLAB_URI);
 
 //
 // ## SimpleServer `SimpleServer(obj)`
@@ -22,32 +24,9 @@ var io = socketio.listen(server);
 
 router.use(express.static(path.resolve(__dirname, 'client')));
 
-//var Herald = db('herald');
-var Herald = function() {
-  this.god;
-  
-  this.speed = 1;
-  this.needs = {
-    food: 0,
-    gold: 0,
-    life: 0
-  }
-  
-  this.memory = {
-    locations: [
-      {
-        x: 12,
-        y: 4,
-        gauges: {
-          food: 50,
-          gold: 10
-        }
-      }
-    ]
-  }
-};
+var Herald = db.model('Herald');
 
-Herald.prototype.calculateNeeds = function() {
+Herald.prototype.makeAListOfMyNeeds = function() {
   
 }
 
@@ -67,27 +46,27 @@ Herald.prototype.stopReportToMeBecauseIAfk = function() {
   delete this.socket;
 }
 
-Herald.prototype.tellItToGod = function() {
+Herald.prototype.tellItToMyGod = function() {
   this.socket.emit('action');
 }
 
 Herald.prototype.animate = function() {
-  this.calculateNeeds();
+  var me = this;
+  me.makeAListOfMyNeeds();
   
-  if(this.shouldMove()) {
-    this.decideLocation();
-    this.move();
+  me.decideWhatToDo();
+  
+  if(me.shouldMove()) {
+    me.decideWhereToGo();
+    me.move();
   } else {
-    this.act();
+    me.doIt();
   }
   
-  this.reportToGod();
+  me.tellItToMyGod();
 }
 
-var God = function() {
-  this.heralds = [];
-  this.artifacts = [];
-};
+var God = db.model('God');
 
 God.prototype.lose = function(artifact) {
   this.artifacts.remove(artifact);
@@ -98,6 +77,7 @@ God.prototype.giveLife = function() {
   
   if(me.has('human_seed')) {
     var herald = new Herald();
+    herald.speed = 1;
     herald.bowTo(me);
     me.heralds.push(herald);
     me.lose('human_seed');
