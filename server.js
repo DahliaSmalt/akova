@@ -24,7 +24,7 @@ var io = socketio.listen(server);
 
 router.use(express.static(path.resolve(__dirname, 'client')));
 
-var Herald = db.model('Herald');
+var Herald = db.model('Herald', {});
 
 Herald.prototype.makeAListOfMyNeeds = function() {
   
@@ -66,7 +66,7 @@ Herald.prototype.animate = function() {
   me.tellItToMyGod();
 }
 
-var God = db.model('God');
+var God = db.model('God', {});
 
 God.prototype.lose = function(artifact) {
   this.artifacts.remove(artifact);
